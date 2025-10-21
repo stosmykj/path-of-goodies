@@ -59,6 +59,18 @@
 - [x] 32x32 tile grid
 - [x] Color-coded placeholder tiles
 
+**World Map System** (`src/world_map.rs`, `src/world_generator.rs`, `src/systems/world_map_render.rs`):
+- [x] Graph-based strategic map (villages as nodes, paths as edges)
+- [x] Procedural generation with 15 villages and connecting paths
+- [x] Fog of war exploration system
+- [x] Village discovery mechanics
+- [x] Curved and straight paths with multiple waypoints
+- [x] Separate map camera with pan controls
+- [x] Toggle between travel and map view (M key)
+- [x] Visual rendering with circles (villages) and polygons (paths)
+- [x] Dynamic village names (procedurally generated)
+- [x] Village sizes: Hamlet, Village, Town, City
+
 ---
 
 ## How to Build and Run
@@ -102,18 +114,22 @@ trunk build --release
 
 ## Controls
 
-**Movement**:
+**Movement (Travel View)**:
 - `W` / `↑` - Move North
 - `S` / `↓` - Move South
 - `A` / `←` - Move West
 - `D` / `→` - Move East
 
+**Map View**:
+- `M` - Toggle world map view
+- `W`/`A`/`S`/`D` or Arrow Keys - Pan camera around map
+
 **Coming Soon**:
 - `Space` - Whip horse (speed boost)
 - `C` - Set up camp
 - `I` - Inventory
-- `M` - Map
 - `ESC` - Pause menu
+- Click village on map to travel
 
 ---
 
@@ -124,13 +140,19 @@ trunk build --release
 2. **Horse Stamina**: Watch your horse's stamina drain as you travel
 3. **Day/Night Cycle**: Time progresses (configurable speed)
 4. **Resource Tracking**: Gold, food, water displayed in HUD
-5. **Procedural World**: Random terrain generation
+5. **Procedural World**: Random terrain generation (tiles)
+6. **World Map**: Strategic graph-based map with villages and paths
+7. **Fog of War**: Explore and discover new villages
+8. **Map Navigation**: Pan around the strategic map view
 
 ### Visual Features
-- Placeholder sprites (colored squares)
+- Placeholder sprites (colored squares in travel view)
 - Camera follows wagon smoothly
 - Dynamic background color based on time of day
 - HUD with resource information
+- World map with circular village markers and path polygons
+- Village names procedurally generated
+- Fog of war effect (dimmed undiscovered villages)
 
 ---
 
@@ -141,12 +163,15 @@ src/
 ├── main.rs              # App initialization and setup
 ├── components.rs        # All ECS components
 ├── resources.rs         # Global game resources
+├── world_map.rs         # World map data structures (graph)
+├── world_generator.rs   # Procedural world map generation
 └── systems/
-    ├── mod.rs           # Systems module
-    ├── movement.rs      # Wagon/horse movement logic
-    ├── ui.rs            # HUD and UI systems
-    ├── time_system.rs   # Game time and day/night
-    └── world.rs         # World generation
+    ├── mod.rs             # Systems module
+    ├── movement.rs        # Wagon/horse movement logic
+    ├── ui.rs              # HUD and UI systems
+    ├── time_system.rs     # Game time and day/night
+    ├── world.rs           # Tile-based world generation
+    └── world_map_render.rs # Strategic map rendering
 
 docs/                    # Design documentation
 ├── GAME_DESIGN.md
@@ -155,7 +180,8 @@ docs/                    # Design documentation
 ├── COMBAT_SYSTEM_DESIGN.md
 ├── ENCOUNTERS_BRAINSTORM.md
 ├── ADDITIONAL_MECHANICS_BRAINSTORM.md
-└── RESOURCE_CONSUMPTION.md
+├── RESOURCE_CONSUMPTION.md
+└── WORLD_MAP_SYSTEM.md  # World map documentation
 
 mods/                    # Modding system (data-driven)
 └── example_mod/
@@ -166,6 +192,7 @@ mods/                    # Modding system (data-driven)
 ROADMAP.md              # Development roadmap
 ART_STYLE_DECISION.md   # Art specifications
 MODDING_SYSTEM.md       # Modding architecture
+DEVELOPMENT.md          # This file - development guide
 ```
 
 ---

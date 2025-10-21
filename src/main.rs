@@ -3,10 +3,14 @@ use bevy::prelude::*;
 mod components;
 mod resources;
 mod systems;
+mod world_map;
+mod world_generator;
 
 use components::*;
 use resources::*;
 use systems::*;
+use world_map::*;
+use world_generator::*;
 
 fn main() {
     App::new()
@@ -28,10 +32,13 @@ fn main() {
         .insert_resource(ClearColor(Color::srgb(0.5, 0.7, 0.9))) // Day time default
         // Startup systems
         .add_systems(Startup, (
+            setup_world_map_resource,
             setup_world,
             setup_camera,
             setup_wagon,
             setup_hud,
+            setup_world_map_camera,
+            setup_map_ui,
         ))
         // Update systems - run during Traveling state
         .add_systems(Update, (
@@ -41,6 +48,16 @@ fn main() {
             update_game_time,
             update_ambient_lighting,
         ).run_if(in_state(GameState::Traveling)))
+        // World map systems - run in MainMenu state (using as map view)
+        .add_systems(Update, (
+            render_world_map,
+            update_world_map_visuals,
+            world_map_camera_controls,
+        ).run_if(in_state(GameState::MainMenu)))
+        // Global systems - run in all states
+        .add_systems(Update, (
+            toggle_world_map,
+        ))
         // UI update systems - run in all states
         .add_systems(Update, (
             update_resources_display,
@@ -82,4 +99,23 @@ fn setup_wagon(mut commands: Commands) {
 
     info!("Wagon initialized with default stats");
     info!("Use WASD or Arrow keys to move");
+}
+
+/// Generate and initialize the world map
+fn setup_world_map_resource(mut commands: Commands) {
+    let config = WorldGenConfig::default();
+    let world_map = generate_world_map(config);
+
+    info!("World map generated:");
+    info!("  - {} villages", world_map.villages.len());
+    info!("  - {} paths", world_map.paths.len());
+    info!("  - Starting village: {} ({})",
+        world_map.starting_village,
+        world_map.villages.get(&world_map.starting_village)
+            .map(|v| v.name.as_str())
+            .unwrap_or("Unknown")
+    );
+    info!("Press M to toggle world map view");
+
+    commands.insert_resource(world_map);
 }
