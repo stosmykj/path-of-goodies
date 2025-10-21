@@ -1,0 +1,102 @@
+// Example guard definitions
+//
+// This file adds new guard types to the game.
+// Guards can be hired at cities to defend your caravan.
+
+(
+    guards: [
+        // Elite Archer - A powerful upgraded archer
+        (
+            id: "elite_archer",
+            name: "Elite Archer",
+            description: "A highly trained bowman with exceptional accuracy. Fires piercing arrows that can hit multiple enemies.",
+
+            // Combat stats
+            stats: (
+                health: 100.0,           // Hit points
+                damage: 18.0,            // Damage per hit
+                attack_speed: 1.8,       // Attacks per second
+                attack_range: 250.0,     // Range in pixels
+                movement_speed: 0.0,     // Guards don't move (attached to wagon)
+            ),
+
+            // Hiring costs
+            cost: (
+                hire: 150,               // One-time hiring cost (gold)
+                wages: 30,               // Cost per delivery mission
+            ),
+
+            // Visual appearance
+            sprite: "sprites/guards/elite_archer.png",
+            sprite_size: (32, 32),       // Width, height in pixels
+
+            // Special abilities
+            abilities: [
+                (
+                    id: "piercing_shot",
+                    name: "Piercing Shot",
+                    description: "Arrows pierce through enemies, hitting multiple targets",
+                    cooldown: 5.0,       // Seconds between uses
+                ),
+            ],
+
+            // Unlock requirements
+            unlock_requirements: (
+                min_reputation: 50,      // Requires 50+ reputation
+                min_level: 5,            // Requires player level 5+
+                completed_contracts: 10, // Requires 10 completed deliveries
+            ),
+
+            // Morale system
+            morale: (
+                base: 80.0,              // Starting morale
+                decay_rate: 2.0,         // Per delivery
+                boost_on_victory: 10.0,  // When defeating enemies
+            ),
+        ),
+
+        // Heavy Crossbowman - Slow but powerful
+        (
+            id: "crossbowman",
+            name: "Heavy Crossbowman",
+            description: "Wielding a heavy crossbow, this guard deals massive damage but fires slowly.",
+
+            stats: (
+                health: 90.0,
+                damage: 35.0,            // Very high damage
+                attack_speed: 0.6,       // Slow attack rate
+                attack_range: 200.0,
+                movement_speed: 0.0,
+            ),
+
+            cost: (
+                hire: 120,
+                wages: 25,
+            ),
+
+            sprite: "sprites/guards/crossbowman.png",
+            sprite_size: (32, 32),
+
+            abilities: [
+                (
+                    id: "armor_piercing",
+                    name: "Armor Piercing",
+                    description: "Bolts ignore enemy armor",
+                    cooldown: 0.0,       // Passive ability (always active)
+                ),
+            ],
+
+            unlock_requirements: (
+                min_reputation: 30,
+                min_level: 3,
+                completed_contracts: 5,
+            ),
+
+            morale: (
+                base: 70.0,
+                decay_rate: 1.5,
+                boost_on_victory: 8.0,
+            ),
+        ),
+    ],
+)

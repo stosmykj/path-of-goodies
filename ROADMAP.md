@@ -19,6 +19,7 @@
 - Resource management (food, water, gold)
 - Persistent progression and permadeath
 - Multiplayer guilds and PvP
+- **Full modding support** - Community-driven content from day one
 
 **Platform Priority:**
 1. Web (WASM) - Primary target for MVP
@@ -38,13 +39,19 @@
 bevy = "0.15"               # Core engine
 bevy_ecs_tilemap = "*"      # Isometric tilemap rendering
 rand = "*"                  # Procedural generation
-serde = "*"                 # Save/load, networking
+serde = "*"                 # Save/load, networking, modding
+ron = "*"                   # RON format for mod data
 noise = "*"                 # Perlin/Simplex noise for terrain
 pathfinding = "*"           # AI pathfinding
+notify = "*"                # File watching for hot-reload
 
-# Networking (Phase 3+)
+# Networking (Phase 4+)
 bevy_replicon = "*"         # ECS replication for multiplayer
 renet = "*"                 # UDP networking
+
+# Modding/Scripting (Post-Launch)
+mlua = "*"                  # Lua scripting (optional)
+rhai = "*"                  # Alternative: Rhai scripting (optional)
 ```
 
 ### Build Tools
@@ -98,6 +105,12 @@ renet = "*"                 # UDP networking
   - Simple path between them
 
 **Deliverable**: Move a wagon across procedurally generated terrain
+
+- [ ] **Modding Foundation (Week 3)**
+  - Data-driven design (no hardcoded game content)
+  - RON file loading for contracts, guards, enemies
+  - Asset path resolution system
+  - Mod folder structure setup
 
 #### 1.2 Resource Management (Week 4)
 - [ ] **Resource system**
@@ -192,6 +205,12 @@ renet = "*"                 # UDP networking
   - Consumables (healing potions)
 
 **Deliverable**: Varied encounters make each journey unique
+
+- [ ] **Modding System (Week 8)**
+  - Asset override system (mods can replace sprites/audio)
+  - Mod metadata format (mod.ron)
+  - Mod loading and priority system
+  - Basic validation and error handling
 
 #### 2.3 Progression & Upgrades (Week 9)
 - [ ] **Persistent progression**
@@ -293,6 +312,12 @@ renet = "*"                 # UDP networking
   - Death animations
 
 **Deliverable**: Professional, polished interface
+
+- [ ] **Modding Tools (Week 13)**
+  - Hot-reload system for development
+  - In-game mod manager UI (enable/disable mods)
+  - Mod conflict detection and warnings
+  - Example starter mod template
 
 #### 3.4 Audio & Juice (Week 14)
 - [ ] **Sound effects**
@@ -505,12 +530,21 @@ renet = "*"                 # UDP networking
 - Performance tuning for mobile hardware
 - App store submission
 
+### Advanced Modding (Months 4-6)
+- Lua/Rhai scripting support for advanced mods
+- Steam Workshop integration
+- Mod browser with search and ratings
+- One-click mod install/uninstall
+- Community mod showcase
+- Mod creation CLI tools
+- Modding documentation and tutorials
+
 ### Advanced Features (Months 6+)
 - Seasonal events
 - Leaderboards
-- Steam Workshop (mod support)
 - More biomes and content
 - Quality-of-life improvements
+- Mod contests and featured mods
 
 ---
 

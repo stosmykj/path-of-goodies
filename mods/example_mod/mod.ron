@@ -1,0 +1,50 @@
+// Example mod metadata
+//
+// This file defines the mod's identity, dependencies, and compatibility.
+// It must be named "mod.ron" and placed in the root of your mod folder.
+
+(
+    // Mod Identity
+    id: "example_mod",
+    name: "Example Mod - New Guards",
+    version: "1.0.0",
+    author: "Your Name",
+    description: "Adds a new elite archer guard type to the game with enhanced stats and abilities.",
+
+    // Compatibility
+    game_version: "0.1.0",           // Minimum required game version
+    game_version_max: Some("0.2.0"), // Optional maximum version
+
+    // Dependencies (other mods this mod requires)
+    dependencies: [
+        (
+            id: "base_game",
+            version: "0.1.0",
+            optional: false,
+        ),
+    ],
+
+    // What this mod modifies (for conflict detection)
+    modifies: [
+        "guards",
+        "sprites",
+    ],
+
+    // Load priority (higher number = loads later, can override other mods)
+    // Base game = 0, typical mods = 100-1000
+    priority: 100,
+
+    // Tags for discovery and filtering
+    tags: [
+        "gameplay",
+        "guards",
+        "balance",
+    ],
+
+    // URLs (optional)
+    homepage: Some("https://example.com/my-mod"),
+    repository: Some("https://github.com/username/example-mod"),
+
+    // License
+    license: "MIT",
+)
