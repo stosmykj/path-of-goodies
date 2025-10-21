@@ -41,6 +41,7 @@ fn main() {
         .add_systems(Startup, (
             setup_world_map_resource,
             setup_towns_database,
+            generate_contracts,
             setup_world,
             setup_camera,
             setup_wagon,
@@ -57,6 +58,9 @@ fn main() {
             update_ambient_lighting,
             update_travel_progress,
             handle_arrival,
+            handle_whip,
+            update_whip_timers,
+            toggle_camping,
         ).run_if(in_state(GameState::Traveling)))
         // World map systems - run in MainMenu state (using as map view)
         .add_systems(Update, (
@@ -68,12 +72,26 @@ fn main() {
         // Town systems - run in Town state
         .add_systems(OnEnter(GameState::Town), (
             setup_town_ui,
+            check_contract_completion,
         ))
         .add_systems(Update, (
             handle_town_interactions,
+            show_contracts_ui,
+            handle_contract_acceptance,
         ).run_if(in_state(GameState::Town)))
         .add_systems(OnExit(GameState::Town), (
             close_town_ui,
+        ))
+        // Camping systems - run in Camping state
+        .add_systems(OnEnter(GameState::Camping), (
+            setup_camping_ui,
+            rest_at_camp,
+        ))
+        .add_systems(Update, (
+            toggle_camping,
+        ).run_if(in_state(GameState::Camping)))
+        .add_systems(OnExit(GameState::Camping), (
+            close_camping_ui,
         ))
         // Global systems - run in all states
         .add_systems(Update, (
@@ -115,11 +133,14 @@ fn setup_wagon(mut commands: Commands) {
         PlayerInventory::default(),
         TravelState::default(),
         Velocity::default(),
+        WhipCooldown::default(),
         Name::new("Player Wagon"),
     ));
 
     info!("Wagon initialized with default stats");
     info!("Use WASD or Arrow keys to move");
+    info!("Press SPACE to whip horse for speed boost");
+    info!("Press C to set up camp");
 }
 
 /// Generate and initialize the world map
@@ -152,4 +173,44 @@ fn setup_towns_database(
     }
 
     info!("Towns database initialized with {} towns", towns_db.towns.len());
+}
+
+/// Generate contracts for all villages
+fn generate_contracts(
+    mut contracts: ResMut<AvailableContracts>,
+    world_map: Res<WorldMap>,
+) {
+    for (village_id, village) in &world_map.villages {
+        // Get connected villages for this village
+        let mut connected: Vec<(usize, String, f32)> = Vec::new();
+
+        if let Some(path_ids) = world_map.adjacency.get(village_id) {
+            for path_id in path_ids {
+                if let Some(path) = world_map.paths.get(path_id) {
+                    let other_id = if path.village_a == *village_id {
+                        path.village_b
+                    } else {
+                        path.village_a
+                    };
+
+                    if let Some(other_village) = world_map.villages.get(&other_id) {
+                        connected.push((other_id, other_village.name.clone(), path.distance));
+                    }
+                }
+            }
+        }
+
+        // Generate contracts for this village
+        let village_contracts = generate_contracts_for_village(
+            *village_id,
+            &village.name,
+            &connected,
+        );
+
+        for contract in village_contracts {
+            contracts.add_contract(contract);
+        }
+    }
+
+    info!("Generated {} contracts across all villages", contracts.contracts.len());
 }
