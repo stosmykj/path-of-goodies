@@ -1,0 +1,33 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Bevy
+.bevy/
+
+# WASM/Web
+/dist/
+/pkg/
+wasm-pack.log
+
+# Assets (temporary)
+# Uncomment to ignore large asset files
+# /assets/**/*.psd
+# /assets/**/*.wav
+# /assets/**/*.mp3
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
