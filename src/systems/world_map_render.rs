@@ -257,3 +257,76 @@ pub fn setup_map_ui(mut commands: Commands) {
             ));
         });
 }
+
+/// Handle clicking on villages to start travel
+pub fn handle_village_click(
+    mut commands: Commands,
+    mouse_button: Res<ButtonInput<MouseButton>>,
+    windows: Query<&Window>,
+    camera_query: Query<(&Camera, &GlobalTransform), With<WorldMapCamera>>,
+    village_markers: Query<(&Transform, &VillageMarker)>,
+    world_map: Res<WorldMap>,
+    mut travel_info: ResMut<crate::resources::TravelInfo>,
+    mut next_state: ResMut<NextState<crate::resources::GameState>>,
+    current_town: Res<crate::towns::CurrentTown>,
+    wagon_query: Query<Entity, With<crate::components::Wagon>>,
+) {
+    // Only handle clicks when in map view
+    if mouse_button.just_pressed(MouseButton::Left) {
+        if let Ok(window) = windows.get_single() {
+            if let Some(cursor_pos) = window.cursor_position() {
+                if let Ok((camera, camera_transform)) = camera_query.get_single() {
+                    // Convert cursor position to world coordinates
+                    let window_size = Vec2::new(window.width(), window.height());
+
+                    // Get viewport position
+                    if let Some(world_pos) = camera.viewport_to_world_2d(camera_transform, cursor_pos) {
+                        // Check if any village was clicked
+                        for (transform, marker) in village_markers.iter() {
+                            let village_pos = Vec2::new(transform.translation.x, transform.translation.y);
+                            let distance = world_pos.distance(village_pos);
+
+                            if let Some(village) = world_map.villages.get(&marker.village_id) {
+                                let radius = village.size.radius();
+
+                                if distance <= radius && village.is_discovered {
+                                    // Village clicked!
+                                    info!("Clicked on village: {}", village.name);
+
+                                    // Determine origin village (current location or last known)
+                                    let origin_id = current_town.village_id.unwrap_or(world_map.starting_village);
+
+                                    if origin_id != marker.village_id {
+                                        // Start travel
+                                        if let Ok(wagon_entity) = wagon_query.get_single() {
+                                            match crate::systems::travel::start_travel_to_village(
+                                                &mut commands,
+                                                wagon_entity,
+                                                origin_id,
+                                                marker.village_id,
+                                                &world_map,
+                                                &mut travel_info,
+                                            ) {
+                                                Ok(()) => {
+                                                    info!("Started traveling to {}", village.name);
+                                                    next_state.set(crate::resources::GameState::Traveling);
+                                                }
+                                                Err(e) => {
+                                                    warn!("Cannot travel: {}", e);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        info!("Already at this village!");
+                                    }
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

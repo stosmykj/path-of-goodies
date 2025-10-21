@@ -5,12 +5,16 @@ mod resources;
 mod systems;
 mod world_map;
 mod world_generator;
+mod contracts;
+mod towns;
 
 use components::*;
 use resources::*;
 use systems::*;
 use world_map::*;
 use world_generator::*;
+use contracts::*;
+use towns::*;
 
 fn main() {
     App::new()
@@ -30,9 +34,13 @@ fn main() {
         .insert_resource(TravelInfo::default())
         .insert_resource(GameSettings::default())
         .insert_resource(ClearColor(Color::srgb(0.5, 0.7, 0.9))) // Day time default
+        .insert_resource(TownsDatabase::new())
+        .insert_resource(AvailableContracts::new())
+        .insert_resource(CurrentTown::default())
         // Startup systems
         .add_systems(Startup, (
             setup_world_map_resource,
+            setup_towns_database,
             setup_world,
             setup_camera,
             setup_wagon,
@@ -47,13 +55,26 @@ fn main() {
             update_horse_stamina,
             update_game_time,
             update_ambient_lighting,
+            update_travel_progress,
+            handle_arrival,
         ).run_if(in_state(GameState::Traveling)))
         // World map systems - run in MainMenu state (using as map view)
         .add_systems(Update, (
             render_world_map,
             update_world_map_visuals,
             world_map_camera_controls,
+            handle_village_click,
         ).run_if(in_state(GameState::MainMenu)))
+        // Town systems - run in Town state
+        .add_systems(OnEnter(GameState::Town), (
+            setup_town_ui,
+        ))
+        .add_systems(Update, (
+            handle_town_interactions,
+        ).run_if(in_state(GameState::Town)))
+        .add_systems(OnExit(GameState::Town), (
+            close_town_ui,
+        ))
         // Global systems - run in all states
         .add_systems(Update, (
             toggle_world_map,
@@ -118,4 +139,17 @@ fn setup_world_map_resource(mut commands: Commands) {
     info!("Press M to toggle world map view");
 
     commands.insert_resource(world_map);
+}
+
+/// Setup towns database from world map villages
+fn setup_towns_database(
+    mut towns_db: ResMut<TownsDatabase>,
+    world_map: Res<WorldMap>,
+) {
+    for (id, village) in &world_map.villages {
+        let town_data = TownData::new(*id, village.size);
+        towns_db.add_town(town_data);
+    }
+
+    info!("Towns database initialized with {} towns", towns_db.towns.len());
 }
