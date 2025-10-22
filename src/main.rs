@@ -7,6 +7,8 @@ mod world_map;
 mod world_generator;
 mod contracts;
 mod towns;
+mod encounters;
+mod guards;
 
 use components::*;
 use resources::*;
@@ -15,6 +17,8 @@ use world_map::*;
 use world_generator::*;
 use contracts::*;
 use towns::*;
+use encounters::*;
+use guards::*;
 
 fn main() {
     App::new()
@@ -37,6 +41,10 @@ fn main() {
         .insert_resource(TownsDatabase::new())
         .insert_resource(AvailableContracts::new())
         .insert_resource(CurrentTown::default())
+        .insert_resource(ActiveEncounter::default())
+        .insert_resource(EncounterChance::default())
+        .insert_resource(GuardsForHire::default())
+        .insert_resource(HiredGuards::new(4)) // Max 4 guards
         // Startup systems
         .add_systems(Startup, (
             setup_world_map_resource,
@@ -61,6 +69,8 @@ fn main() {
             handle_whip,
             update_whip_timers,
             toggle_camping,
+            check_for_encounter,
+            show_hired_guards_display,
         ).run_if(in_state(GameState::Traveling)))
         // World map systems - run in MainMenu state (using as map view)
         .add_systems(Update, (
@@ -73,14 +83,28 @@ fn main() {
         .add_systems(OnEnter(GameState::Town), (
             setup_town_ui,
             check_contract_completion,
+            generate_guards_for_hire,
         ))
         .add_systems(Update, (
             handle_town_interactions,
             show_contracts_ui,
             handle_contract_acceptance,
+            show_guard_hire_ui,
+            handle_guard_hiring,
+            show_hired_guards_display,
         ).run_if(in_state(GameState::Town)))
         .add_systems(OnExit(GameState::Town), (
             close_town_ui,
+        ))
+        // Encounter systems - run in Paused state
+        .add_systems(OnEnter(GameState::Paused), (
+            show_encounter_ui,
+        ))
+        .add_systems(Update, (
+            handle_encounter_choice,
+        ).run_if(in_state(GameState::Paused)))
+        .add_systems(OnExit(GameState::Paused), (
+            close_encounter_ui,
         ))
         // Camping systems - run in Camping state
         .add_systems(OnEnter(GameState::Camping), (
@@ -213,4 +237,18 @@ fn generate_contracts(
     }
 
     info!("Generated {} contracts across all villages", contracts.contracts.len());
+}
+
+/// Generate guards for hire when entering a town
+fn generate_guards_for_hire(
+    mut guards_for_hire: ResMut<GuardsForHire>,
+    current_town: Res<CurrentTown>,
+    world_map: Res<WorldMap>,
+) {
+    if let Some(village_id) = current_town.village_id {
+        if let Some(village) = world_map.villages.get(&village_id) {
+            *guards_for_hire = GuardsForHire::generate_for_town(village.size);
+            info!("Generated {} guards for hire in {}", guards_for_hire.guards.len(), village.name);
+        }
+    }
 }
