@@ -342,7 +342,7 @@ pub fn show_temple_ui(
 
                                 // Services
                                 panel.spawn((
-                                    Text::new("1. Healing (20g) - Restore 50 HP to all"),
+                                    Text::new("1. Full Healing (30g) - Restore full HP to all"),
                                     TextFont {
                                         font_size: 16.0,
                                         ..default()
@@ -351,7 +351,7 @@ pub fn show_temple_ui(
                                 ));
 
                                 panel.spawn((
-                                    Text::new("2. Blessing (30g) - +10% stats for 1 day"),
+                                    Text::new("2. Blessing (50g) - +20 max HP to party"),
                                     TextFont {
                                         font_size: 16.0,
                                         ..default()
@@ -360,7 +360,7 @@ pub fn show_temple_ui(
                                 ));
 
                                 panel.spawn((
-                                    Text::new("3. Prayer (5g) - Increase morale"),
+                                    Text::new("3. Horse Blessing (40g) - +20 HP, +10 morale"),
                                     TextFont {
                                         font_size: 16.0,
                                         ..default()
@@ -369,7 +369,7 @@ pub fn show_temple_ui(
                                 ));
 
                                 panel.spawn((
-                                    Text::new("\nPress T to close\n(Services coming soon)"),
+                                    Text::new("\nPress T to close | Press 1-3 to purchase service"),
                                     TextFont {
                                         font_size: 14.0,
                                         ..default()
@@ -378,6 +378,118 @@ pub fn show_temple_ui(
                                 ));
                             });
                     });
+            }
+        }
+    }
+}
+
+/// Handle blacksmith equipment purchase
+pub fn handle_blacksmith_purchase(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut inventory: Query<&mut PlayerInventory>,
+    mut blacksmith_inv: ResMut<BlacksmithInventory>,
+    blacksmith_ui: Query<Entity, With<BlacksmithUI>>,
+    mut commands: Commands,
+) {
+    if !blacksmith_ui.is_empty() {
+        let keys = [
+            KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3,
+            KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6,
+            KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9,
+        ];
+
+        for (i, key) in keys.iter().enumerate() {
+            if keyboard.just_pressed(*key) && i < blacksmith_inv.equipment.len() {
+                if let Ok(mut inv) = inventory.get_single_mut() {
+                    let eq = &blacksmith_inv.equipment[i];
+
+                    if inv.gold >= eq.price {
+                        inv.gold -= eq.price;
+                        info!("💰 Purchased {} for {:.0}g! (+{:.0} DMG, +{:.0} ARM, +{:.0} HP, +{:.1}% SPD)",
+                            eq.name, eq.price, eq.damage_bonus, eq.armor_bonus, eq.health_bonus, eq.speed_bonus * 100.0);
+
+                        // Remove purchased item
+                        blacksmith_inv.equipment.remove(i);
+
+                        // TODO: Add equipment to player/guard inventory when equipment system is implemented
+                    } else {
+                        info!("❌ Not enough gold! Need {:.0}g (have {:.0}g)", eq.price, inv.gold);
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+
+/// Handle temple service selection
+pub fn handle_temple_service(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut inventory: Query<&mut PlayerInventory>,
+    mut horse: Query<&mut Horse>,
+    mut hired_guards: ResMut<HiredGuards>,
+    temple_ui: Query<Entity, With<TempleUI>>,
+    mut commands: Commands,
+) {
+    if !temple_ui.is_empty() {
+        // Service 1: Full heal (30g)
+        if keyboard.just_pressed(KeyCode::Digit1) {
+            if let Ok(mut inv) = inventory.get_single_mut() {
+                if inv.gold >= 30.0 {
+                    inv.gold -= 30.0;
+
+                    // Heal horse
+                    if let Ok(mut h) = horse.get_single_mut() {
+                        h.health = h.max_health;
+                    }
+
+                    // Heal all guards
+                    for guard in &mut hired_guards.guards {
+                        guard.data.health = guard.data.max_health;
+                    }
+
+                    info!("✨ Full healing received! Everyone restored to full health. (-30g)");
+                } else {
+                    info!("❌ Not enough gold! Need 30g");
+                }
+            }
+        }
+
+        // Service 2: Blessing (50g) - increase max health
+        if keyboard.just_pressed(KeyCode::Digit2) {
+            if let Ok(mut inv) = inventory.get_single_mut() {
+                if inv.gold >= 50.0 {
+                    inv.gold -= 50.0;
+
+                    // Bless all guards
+                    for guard in &mut hired_guards.guards {
+                        guard.data.max_health += 20.0;
+                        guard.data.health = guard.data.max_health;
+                    }
+
+                    info!("🙏 Blessing received! All party members gained +20 max health. (-50g)");
+                } else {
+                    info!("❌ Not enough gold! Need 50g");
+                }
+            }
+        }
+
+        // Service 3: Horse blessing (40g)
+        if keyboard.just_pressed(KeyCode::Digit3) {
+            if let Ok(mut inv) = inventory.get_single_mut() {
+                if inv.gold >= 40.0 {
+                    inv.gold -= 40.0;
+
+                    if let Ok(mut h) = horse.get_single_mut() {
+                        h.max_health += 20.0;
+                        h.health = h.max_health;
+                        h.morale = (h.morale + 10.0).min(100.0);
+                    }
+
+                    info!("🐴 Horse blessed! +20 max health and +10 morale. (-40g)");
+                } else {
+                    info!("❌ Not enough gold! Need 40g");
+                }
             }
         }
     }

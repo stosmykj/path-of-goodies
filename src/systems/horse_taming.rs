@@ -33,8 +33,9 @@ pub fn start_horse_taming(
 pub fn show_horse_taming_ui(
     mut commands: Commands,
     taming_state: Res<HorseTamingState>,
+    existing_ui: Query<Entity, With<HorseTamingUI>>,
 ) {
-    if taming_state.active {
+    if taming_state.active && existing_ui.is_empty() {
         commands
             .spawn((
                 Node {
