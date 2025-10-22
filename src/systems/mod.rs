@@ -9,6 +9,9 @@ pub mod camping;
 pub mod whip;
 pub mod encounter_system;
 pub mod guards_ui;
+pub mod horse_death;
+pub mod town_services;
+pub mod horse_taming;
 
 // Re-export commonly used items
 pub use movement::*;
@@ -22,3 +25,6 @@ pub use camping::*;
 pub use whip::*;
 pub use encounter_system::*;
 pub use guards_ui::*;
+pub use horse_death::*;
+pub use town_services::*;
+pub use horse_taming::*;

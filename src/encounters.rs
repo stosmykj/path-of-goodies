@@ -131,6 +131,7 @@ pub enum EncounterOutcome {
     LoseResources { gold: f32, food: f32, water: f32 },
     HorseEffect { health: f32, stamina: f32, morale: f32 },
     TimeDelay { hours: f32 },
+    StartHorseTaming,
     Continue,
 }
 
@@ -255,8 +256,8 @@ pub fn generate_encounter(encounter_type: EncounterType) -> Encounter {
 
         EncounterType::WildHorses => vec![
             EncounterChoice {
-                text: "Try to tame one (risky)".to_string(),
-                outcome: EncounterOutcome::TimeDelay { hours: 1.0 },
+                text: "Try to tame one (mini-game)".to_string(),
+                outcome: EncounterOutcome::StartHorseTaming,
             },
             EncounterChoice {
                 text: "Just watch them pass".to_string(),

@@ -182,6 +182,7 @@ pub fn handle_encounter_choice(
     mut inventory: Query<&mut PlayerInventory>,
     mut horse: Query<&mut Horse>,
     mut game_time: ResMut<GameTime>,
+    mut taming_state: ResMut<crate::systems::HorseTamingState>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     if let Some(ref encounter) = active_encounter.encounter {
@@ -248,6 +249,24 @@ pub fn handle_encounter_choice(
                             game_time.day += 1;
                         }
                         info!("Time passed: {:.1} hours", hours);
+                    }
+
+                    EncounterOutcome::StartHorseTaming => {
+                        // Start horse taming mini-game
+                        use rand::Rng;
+                        let mut rng = rand::thread_rng();
+
+                        taming_state.active = true;
+                        taming_state.attempts_remaining = 5;
+                        taming_state.success_threshold = rng.gen_range(8..15);
+                        taming_state.current_progress = 0;
+
+                        info!("🐴 Horse taming started! Press SPACE repeatedly to tame the horse!");
+
+                        // Clear encounter but stay in Paused state for taming
+                        active_encounter.encounter = None;
+                        // State remains Paused for the taming mini-game
+                        return; // Don't transition to Traveling yet
                     }
 
                     EncounterOutcome::Continue => {

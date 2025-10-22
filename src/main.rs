@@ -9,6 +9,7 @@ mod contracts;
 mod towns;
 mod encounters;
 mod guards;
+mod equipment;
 
 use components::*;
 use resources::*;
@@ -19,6 +20,7 @@ use contracts::*;
 use towns::*;
 use encounters::*;
 use guards::*;
+use equipment::*;
 
 fn main() {
     App::new()
@@ -45,6 +47,8 @@ fn main() {
         .insert_resource(EncounterChance::default())
         .insert_resource(GuardsForHire::default())
         .insert_resource(HiredGuards::new(4)) // Max 4 guards
+        .insert_resource(HorseTamingState::default())
+        .insert_resource(BlacksmithInventory::default())
         // Startup systems
         .add_systems(Startup, (
             setup_world_map_resource,
@@ -71,6 +75,8 @@ fn main() {
             toggle_camping,
             check_for_encounter,
             show_hired_guards_display,
+            check_horse_death,
+            warn_low_horse_health,
         ).run_if(in_state(GameState::Traveling)))
         // World map systems - run in MainMenu state (using as map view)
         .add_systems(Update, (
@@ -84,6 +90,7 @@ fn main() {
             setup_town_ui,
             check_contract_completion,
             generate_guards_for_hire,
+            generate_blacksmith_inventory,
         ))
         .add_systems(Update, (
             handle_town_interactions,
@@ -92,9 +99,16 @@ fn main() {
             show_guard_hire_ui,
             handle_guard_hiring,
             show_hired_guards_display,
+            show_blacksmith_ui,
+            handle_blacksmith_purchase,
+            show_inn_ui,
+            handle_inn_rest,
+            show_temple_ui,
+            handle_temple_service,
         ).run_if(in_state(GameState::Town)))
         .add_systems(OnExit(GameState::Town), (
             close_town_ui,
+            close_service_uis,
         ))
         // Encounter systems - run in Paused state
         .add_systems(OnEnter(GameState::Paused), (
@@ -117,6 +131,11 @@ fn main() {
         .add_systems(OnExit(GameState::Camping), (
             close_camping_ui,
         ))
+        // Horse taming systems - run in Paused state (when taming is active)
+        .add_systems(Update, (
+            show_horse_taming_ui,
+            handle_horse_taming,
+        ).run_if(in_state(GameState::Paused)))
         // Global systems - run in all states
         .add_systems(Update, (
             toggle_world_map,

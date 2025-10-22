@@ -195,7 +195,7 @@ pub fn setup_town_ui(
 
                                 // Instructions
                                 panel.spawn((
-                                    Text::new("\nPress ESC to leave town\nPress B to buy supplies\nPress C to view contracts\nPress H to hire guards\nPress G to view your party"),
+                                    Text::new("\nPress ESC to leave town\nPress B to buy supplies\nPress C to view contracts\nPress H to hire guards\nPress G to view your party\nPress K for blacksmith\nPress I for inn\nPress T for temple"),
                                     TextFont {
                                         font_size: 16.0,
                                         ..default()
